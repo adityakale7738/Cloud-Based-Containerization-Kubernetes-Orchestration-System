@@ -34,8 +34,8 @@ spec:
 
       containers:
         - name: cloud-demo
-          # REPLACE 'DOCKERHUB_USERNAME' with your actual Docker Hub username (e.g. devstudent/cloud-demo:1.0)
-          image: DOCKERHUB_USERNAME/cloud-demo:1.0
+          # Docker Hub image for Aditya Kale
+          image: adityakale7738/cloud-demo:1.0
           imagePullPolicy: IfNotPresent
           
           ports:
