@@ -1,0 +1,28 @@
+# Git and version control
+.git/
+.gitignore
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Testing and linters
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Kubernetes manifests (not needed inside the application container)
+k8s/
+
+# Documentation and IDE configuration
+README.md
+.vscode/
+.idea/
+*.log

@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-demo-deployment
+  labels:
+    app: cloud-demo
+    tier: frontend
+spec:
+  # Initial desired replica count: 2 Pods for high availability
+  replicas: 2
+  
+  # Zero-downtime rolling update strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Allow 1 extra Pod above desired count during updates (3 total)
+      maxUnavailable: 0  # Never take down existing Pods before new ones pass readiness
+
+  selector:
+    matchLabels:
+      app: cloud-demo
+
+  template:
+    metadata:
+      labels:
+        app: cloud-demo
+        tier: frontend
+    spec:
+      # Enforce container security context (non-root execution)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: cloud-demo
+          # REPLACE 'DOCKERHUB_USERNAME' with your actual Docker Hub username (e.g. devstudent/cloud-demo:1.0)
+          image: DOCKERHUB_USERNAME/cloud-demo:1.0
+          imagePullPolicy: IfNotPresent
+          
+          ports:
+            - containerPort: 5000
+              name: http
+              protocol: TCP
+
+          # Resource requests (guaranteed minimum) and limits (hard ceiling)
+          resources:
+            requests:
+              cpu: "50m"         # 0.05 CPU core
+              memory: "64Mi"     # 64 Megabytes RAM
+            limits:
+              cpu: "200m"        # 0.20 CPU core
+              memory: "128Mi"    # 128 Megabytes RAM
+
+          # Liveness Probe: Checks if container is alive. If this fails 3 times, Kubernetes restarts it.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Readiness Probe: Checks if container is ready to accept traffic.
+          # If this fails, Kubernetes removes the Pod from Service endpoints without restarting.
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+
+          # Environment variables from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: cloud-demo-config
+
+          # Kubernetes Downward API: injects cluster runtime metadata into container environment
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName

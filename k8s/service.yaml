@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-demo-service
+  labels:
+    app: cloud-demo
+    tier: frontend
+spec:
+  # ClusterIP: Secure default. Keeps service internal to the cluster.
+  # For local/playground browser testing, access via 'kubectl port-forward'.
+  type: ClusterIP
+  selector:
+    app: cloud-demo
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80           # Service port (accessible within cluster or via port-forward)
+      targetPort: 5000   # Container port where Gunicorn/Flask is listening
